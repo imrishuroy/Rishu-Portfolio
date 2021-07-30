@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:portfolio/screens/projects.dart';
 import 'package:portfolio/widgets/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,14 +16,12 @@ class PortFolio extends StatelessWidget {
     print(_width);
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: EdgeInsets.only(top: 60.0, bottom: 60.0, left: 20.0),
-
-        // const EdgeInsets.symmetric(
-        //   horizontal: 60.0,
-        //   vertical: 60.0,
-        // ),
-        child: Center(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+            vertical: 20.0,
+          ),
           child: Container(
             //swidth: 700.0,
             child: SingleChildScrollView(
@@ -68,9 +67,10 @@ class PortFolio extends StatelessWidget {
                           onOpen: (link) {
                             launch(link.url);
                           },
-                          text: _width > 550
-                              ? 'Currently working @https://sixteenbrains.com'
-                              : 'Currently working\n@https://sixteenbrains.com',
+                          text: 'works @https://sixteenbrains.com',
+                          // text: _width > 550
+                          //     ? 'Works @https://sixteenbrains.com'
+                          //     : 'Currently working\n@https://sixteenbrains.com',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18.0,
@@ -140,10 +140,12 @@ class PortFolio extends StatelessWidget {
                               icon: FontAwesomeIcons.medium,
                             )
                           ],
-                        )
+                        ),
+                        const SizedBox(height: 40.0),
                       ],
                     ),
-                  )
+                  ),
+                  Projects(),
                 ],
               ),
             ),
