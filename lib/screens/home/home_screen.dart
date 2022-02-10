@@ -1,70 +1,218 @@
 import 'package:flutter/material.dart';
-import 'widgets/widgets.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class HomeScreen extends StatelessWidget {
+import 'package:responsive_builder/responsive_builder.dart';
+import '/adaptive.dart';
+import '/utils/functions.dart';
+import '/values/values.dart';
+import '/widgets/app_drawer.dart';
+import '/widgets/nav_item.dart';
+import '/widgets/spaces.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+
+import 'sections/about_me_section.dart';
+import 'sections/awards_section.dart';
+import 'sections/blog_section.dart';
+import 'sections/footer_section.dart';
+import 'sections/header_section/header_section.dart';
+import 'sections/nav_section/nav_section_mobile.dart';
+import 'sections/nav_section/nav_section_web.dart';
+import 'sections/projects_section.dart';
+import 'sections/skills_section.dart';
+import 'sections/statistics_section.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(milliseconds: 300),
+    vsync: this,
+  );
+  late final Animation<double> _animation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOut,
+  );
+  // bool isFabVisible = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+
+  final ScrollController _scrollController = ScrollController();
+
+  final List<NavItemData> navItems = [
+    NavItemData(name: StringConst.HOME, key: GlobalKey(), isSelected: true),
+    NavItemData(name: StringConst.ABOUT, key: GlobalKey()),
+    NavItemData(name: StringConst.SKILLS, key: GlobalKey()),
+    NavItemData(name: StringConst.PROJECTS, key: GlobalKey()),
+    NavItemData(name: StringConst.AWARDS, key: GlobalKey()),
+    NavItemData(name: StringConst.BLOG, key: GlobalKey()),
+  ];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels < 100) {
+        _controller.reverse();
+      }
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    double screenHeight = heightOfScreen(context);
+    double spacerHeight = screenHeight * 0.10;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-        child: Column(
-          children: [Header()],
+      key: _scaffoldKey,
+      drawer: ResponsiveBuilder(
+        refinedBreakpoints: RefinedBreakpoints(),
+        builder: (context, sizingInformation) {
+          double screenWidth = sizingInformation.screenSize.width;
+          if (screenWidth < RefinedBreakpoints().desktopSmall) {
+            return AppDrawer(
+              menuList: navItems,
+            );
+          } else {
+            return Container();
+          }
+        },
+      ),
+      floatingActionButton: ScaleTransition(
+        scale: _animation,
+        child: FloatingActionButton(
+          onPressed: () {
+            // Scroll to header section
+            scrollToSection(navItems[0].key.currentContext!);
+          },
+          child: Icon(
+            FontAwesomeIcons.arrowUp,
+            size: Sizes.ICON_SIZE_18,
+            color: AppColors.white,
+          ),
         ),
+      ),
+      body: Column(
+        children: [
+          ResponsiveBuilder(
+            refinedBreakpoints: RefinedBreakpoints(),
+            builder: (context, sizingInformation) {
+              double screenWidth = sizingInformation.screenSize.width;
+              if (screenWidth < RefinedBreakpoints().desktopSmall) {
+                return NavSectionMobile(scaffoldKey: _scaffoldKey);
+              } else {
+                return NavSectionWeb(
+                  navItems: navItems,
+                );
+              }
+            },
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Image.asset(ImagePath.BLOB_BEAN_ASH),
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          HeaderSection(
+                            key: navItems[0].key,
+                          ),
+                          SizedBox(height: spacerHeight),
+                          VisibilityDetector(
+                            key: Key("about"),
+                            onVisibilityChanged: (visibilityInfo) {
+                              double visiblePercentage =
+                                  visibilityInfo.visibleFraction * 100;
+                              if (visiblePercentage > 10) {
+                                _controller.forward();
+                              }
+                            },
+                            child: Container(
+                              key: navItems[1].key,
+                              child: AboutMeSection(),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(height: spacerHeight),
+                  Stack(
+                    children: [
+                      Positioned(
+                        top: assignWidth(context, 0.1),
+                        left: -assignWidth(context, 0.05),
+                        child: Image.asset(ImagePath.BLOB_FEMUR_ASH),
+                      ),
+                      Positioned(
+                        right: -assignWidth(context, 0.5),
+                        child: Image.asset(ImagePath.BLOB_SMALL_BEAN_ASH),
+                      ),
+                      Column(
+                        children: [
+                          Container(
+                            key: navItems[2].key,
+                            child: SkillsSection(),
+                          ),
+                          SizedBox(height: spacerHeight),
+                          StatisticsSection(),
+                          SizedBox(height: spacerHeight),
+                          Container(
+                            key: navItems[3].key,
+                            child: ProjectsSection(),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: spacerHeight),
+                  Stack(
+                    children: [
+                      Positioned(
+                        left: -assignWidth(context, 0.6),
+                        child: Image.asset(ImagePath.BLOB_ASH),
+                      ),
+                      Column(
+                        children: [
+                          Container(
+                            key: navItems[4].key,
+                            child: AwardsSection(),
+                          ),
+                          SpaceH40(),
+                          Container(
+                            key: navItems[5].key,
+                            child: BlogSection(),
+                          ),
+                          FooterSection(),
+                        ],
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-// appBar: PreferredSize(
-//   child: AppBar(
-//     elevation: 0.0,
-//     backgroundColor: Colors.white,
-//     title: Padding(
-//       padding: const EdgeInsets.only(top: 10.0),
-//       child: Row(
-//         children: [
-//           CircleAvatar(
-//             backgroundColor: Colors.orange,
-//             radius: 27.0,
-//             child: CircleAvatar(
-//               backgroundColor: Colors.blueGrey,
-//               radius: 25.0,
-//               backgroundImage: AssetImage(
-//                 'assets/avtar.png',
-//               ),
-//             ),
-//           ),
-//           SizedBox(width: 14.0),
-//           Text(
-//             'Rishu Kumar',
-//             style: TextStyle(
-//               color: Colors.black,
-//               fontStyle: FontStyle.italic,
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//     actions: [
-//       ButtonTheme(
-//         height: 20.0,
-//         child: ElevatedButton.icon(
-//           style: ElevatedButton.styleFrom(
-//             // padding: EdgeInsets.zero,
-//             primary: Colors.amber,
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(16.0),
-//             ),
-//           ),
-//           onPressed: () {},
-//           icon: Icon(Icons.send),
-//           label: Text('Contact Me'),
-//         ),
-//       ),
-//       SizedBox(width: 20.0),
-//     ],
-//   ),
-//   preferredSize: Size.fromHeight(300.0),
-// ),
